@@ -117,6 +117,44 @@ input,select{font:inherit;font-size:16px;color:var(--fg);background:var(--surfac
 .kv div{display:flex;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--line);font-size:15px}
 .kv div:last-child{border-bottom:0}
 .kv span{color:var(--muted)}
+.kv b{font-weight:600;text-align:right;min-width:0;overflow-wrap:anywhere}
+
+/* Cardholder */
+.holder{background:var(--surface);border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.holder .hrow{display:flex;align-items:center;gap:14px}
+.avatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#cbbcff,#9c86f2);color:#fff;display:grid;place-items:center;font-weight:800;font-size:19px;flex:none}
+.holder .who{flex:1;min-width:0}
+.holder .who strong{display:block;font-size:18px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.holder .who span{color:var(--muted);font-size:14px}
+.edit{background:var(--surface-2);border-radius:999px;padding:8px 14px;font-weight:700;font-size:14px}
+.edit:hover{background:var(--line)}
+.card .holdername{font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.8;margin-bottom:4px}
+
+/* Motion */
+.card{transition:transform .5s cubic-bezier(.2,.8,.2,1),box-shadow .5s}
+.card::after{content:"";position:absolute;inset:-40%;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.35) 50%,transparent 60%);transform:translateX(-60%);animation:sheen 7s ease-in-out 1.2s infinite;pointer-events:none}
+@keyframes sheen{0%,70%{transform:translateX(-60%)}100%{transform:translateX(60%)}}
+.card.press{transform:scale(.975)}
+.rise{animation:rise .7s cubic-bezier(.2,.8,.2,1) both}
+@keyframes rise{from{opacity:.001;transform:translateY(14px)}}
+.bars i b{transition:height .9s cubic-bezier(.2,.8,.2,1)}
+.tx{animation:rise .5s cubic-bezier(.2,.8,.2,1) both}
+.tx.out{animation:out .35s ease forwards}
+@keyframes out{to{opacity:0;transform:translateX(30px)}}
+.scrim{animation:fade .3s ease both}
+.scrim.closing{animation:fadeout .28s ease forwards}
+.scrim.closing .sheet{animation:down .28s ease forwards}
+@keyframes fade{from{background:rgba(0,0,0,0)}}
+@keyframes fadeout{to{background:rgba(0,0,0,0)}}
+.sheet{animation:up .45s cubic-bezier(.2,.9,.25,1)}
+@keyframes up{from{transform:translateY(100%)}}
+@keyframes down{to{transform:translateY(100%)}}
+.fab{transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+.fab:active,.round:active,.pill button:active,.edit:active,.primary:active{transform:scale(.94)}
+.round,.pill button,.edit,.primary{transition:transform .2s,background .2s}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
 </style>
 
 <div class="app">
@@ -128,12 +166,18 @@ input,select{font:inherit;font-size:16px;color:var(--fg);background:var(--surfac
     </div>
   </div>
 
-  <div class="cards" id="cards"></div>
+  <div class="cards rise" id="cards"></div>
   <div class="dots" id="dots"></div>
 
-  <div class="tiles">
+  <div class="tiles rise" style="animation-delay:.08s">
     <div class="tile"><h3 id="monthLabel">Spending</h3><div class="big" id="monthTotal">$0.00</div></div>
-    <div class="tile"><h3>Weekly Activity</h3><div class="sub" id="cashLabel">+$0.00 Daily Cash</div><div class="bars" id="bars"></div></div>
+    <div class="tile"><h3>Weekly Activity</h3><div class="sub" style="font-variant-numeric:tabular-nums">+<span id="cashAmt">$0.00</span> Daily Cash</div><div class="bars" id="bars"></div></div>
+  </div>
+
+  <div class="listhead"><h2>Cardholder</h2></div>
+  <div class="holder rise" style="animation-delay:.18s">
+    <div class="hrow"><div class="avatar" id="hAvatar"></div><div class="who"><strong id="hName"></strong><span id="hSince"></span></div><button class="edit" id="hEdit">Edit</button></div>
+    <div class="kv" id="hInfo"></div>
   </div>
 
   <div class="listhead"><h2>Latest Transactions</h2></div>
@@ -166,6 +210,23 @@ function seed(){
 let S;
 try{S=JSON.parse(localStorage.getItem("lumen-wallet"))}catch(e){}
 if(!S||!S.cards||!S.cards.length)S=seed();
+if(!S.holder)S.holder={name:"Alex Morgan",email:"alex@example.com",phone:"+1 555 0142",address:"128 Harbor Lane, Springfield",since:"2024"};
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const counters={};
+function countTo(el,to,prefix=""){
+  const from=counters[el.id]??0;counters[el.id]=to;
+  if(reduce||from===to){el.textContent=prefix+fmt(to);return}
+  const t0=performance.now(),d=900;
+  const step=t=>{const p=Math.min(1,(t-t0)/d),e=1-Math.pow(1-p,3);el.textContent=prefix+fmt(from+(to-from)*e);if(p<1)requestAnimationFrame(step)};
+  requestAnimationFrame(step);
+}
+const initials=n=>n.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase()||"?";
+function renderHolder(){
+  const h=S.holder;
+  hAvatar.textContent=initials(h.name);hName.textContent=h.name;hSince.textContent="Member since "+h.since;
+  hInfo.innerHTML=[["Email",h.email],["Phone",h.phone],["Billing Address",h.address]].map(([k,v])=>`<div><span>${k}</span><b>${esc(v||"—")}</b></div>`).join("");
+  document.querySelectorAll(".card .holdername").forEach(e=>e.textContent=h.name);
+}
 const save=()=>{try{localStorage.setItem("lumen-wallet",JSON.stringify(S))}catch(e){}};
 
 const mark=`<svg class="mark" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2"><circle cx="24" cy="24" r="18"/><path d="M24 6v36M6 24h36" opacity=".5"/><circle cx="24" cy="24" r="7" fill="currentColor" stroke="none" opacity=".6"/></svg>`;
@@ -173,7 +234,7 @@ const net=`<div class="net"><svg width="58" height="30" viewBox="0 0 58 30" fill
 
 function renderCards(){
   const el=document.getElementById("cards");
-  el.innerHTML=S.cards.map(c=>`<div class="card ${c.finish}" data-id="${c.id}">${mark}<div class="row"><div><div class="name">${esc(c.name)}</div><div class="num">•••• ${esc(c.last4)}</div></div>${net}</div></div>`).join("");
+  el.innerHTML=S.cards.map(c=>`<div class="card ${c.finish}" data-id="${c.id}">${mark}<div class="row"><div><div class="holdername">${esc(S.holder.name)}</div><div class="name">${esc(c.name)}</div><div class="num">•••• ${esc(c.last4)}</div></div>${net}</div></div>`).join("");
   const idx=Math.max(0,S.cards.findIndex(c=>c.id===S.active));
   requestAnimationFrame(()=>{el.scrollLeft=idx*(el.clientWidth+14)});
   renderDots();
@@ -190,15 +251,17 @@ function renderData(){
   const txs=S.tx.filter(t=>t.card===S.active).sort((a,b)=>b.date.localeCompare(a.date));
   const now=new Date(),ym=now.toISOString().slice(0,7);
   document.getElementById("monthLabel").textContent=now.toLocaleString("en-US",{month:"long"})+" Spending";
-  document.getElementById("monthTotal").textContent=fmt(txs.filter(t=>t.date.startsWith(ym)).reduce((s,t)=>s+ +t.amount,0));
+  countTo(document.getElementById("monthTotal"),txs.filter(t=>t.date.startsWith(ym)).reduce((s,t)=>s+ +t.amount,0));
   const days=[...Array(7)].map((_,i)=>daysAgo(6-i));
   const per=days.map(d=>txs.filter(t=>t.date===d).reduce((s,t)=>s+ +t.amount,0));
   const max=Math.max(...per,1);
   const cash=txs.filter(t=>days.includes(t.date)).reduce((s,t)=>s+t.amount*t.cash/100,0);
-  document.getElementById("cashLabel").textContent="+"+fmt(cash)+" Daily Cash";
-  document.getElementById("bars").innerHTML=per.map(v=>`<i><b style="height:${v?Math.max(12,v/max*100):0}%"></b></i>`).join("");
+  countTo(document.getElementById("cashAmt"),cash);
+  const bars=document.getElementById("bars");
+  if(bars.children.length!==7)bars.innerHTML=per.map(()=>`<i><b style="height:0%"></b></i>`).join("");
+  requestAnimationFrame(()=>requestAnimationFrame(()=>per.forEach((v,i)=>{const b=bars.children[i].firstChild;b.style.transitionDelay=(i*50)+"ms";b.style.height=(v?Math.max(12,v/max*100):0)+"%"})));
   const list=document.getElementById("list");
-  list.innerHTML=txs.length?txs.map(t=>`<button class="tx" data-id="${t.id}"><div class="ico" style="background:${t.color}">${esc(t.merchant.trim()[0]||"?").toUpperCase()}</div><div class="txbody"><div class="txmain"><strong>${esc(t.merchant)}</strong><span>${esc(t.method)}</span><span>${new Date(t.date+"T12:00").toLocaleDateString("en-US",{month:"numeric",day:"numeric",year:"2-digit"})}</span></div><div class="txamt">${fmt(t.amount)}<span class="badge">${t.cash}%</span></div></div></button>`).join(""):`<div class="empty">No transactions on this card yet. Tap + to add one.</div>`;
+  list.innerHTML=txs.length?txs.map((t,i)=>`<button class="tx" data-id="${t.id}" style="animation-delay:${.25+i*.05}s"><div class="ico" style="background:${t.color}">${esc(t.merchant.trim()[0]||"?").toUpperCase()}</div><div class="txbody"><div class="txmain"><strong>${esc(t.merchant)}</strong><span>${esc(t.method)}</span><span>${new Date(t.date+"T12:00").toLocaleDateString("en-US",{month:"numeric",day:"numeric",year:"2-digit"})}</span></div><div class="txamt">${fmt(t.amount)}<span class="badge">${t.cash}%</span></div></div></button>`).join(""):`<div class="empty">No transactions on this card yet. Tap + to add one.</div>`;
 }
 document.getElementById("list").addEventListener("click",e=>{const b=e.target.closest(".tx");if(b)openDetail(b.dataset.id)});
 
@@ -208,7 +271,32 @@ function sheet(html){
   document.getElementById("scrim").addEventListener("click",e=>{if(e.target.id==="scrim")close()});
   const f=root.querySelector("input");if(f)f.focus();
 }
-const close=()=>root.innerHTML="";
+function close(after){
+  const s=document.getElementById("scrim");
+  const done=()=>{root.innerHTML="";if(typeof after==="function")after()};
+  if(!s){done();return}
+  if(reduce){done();return}
+  s.classList.add("closing");setTimeout(done,270);
+}
+function openHolder(){
+  const h=S.holder;
+  sheet(`<div class="sheethead"><h2>Cardholder Information</h2><button class="sub" id="x">Cancel</button></div>
+  <form id="f" style="display:flex;flex-direction:column;gap:14px">
+    <label>Full name<input id="hn" required maxlength="32" value="${esc(h.name)}"></label>
+    <label>Email<input id="he" type="email" maxlength="60" value="${esc(h.email)}"></label>
+    <div class="two"><label>Phone<input id="hp" type="tel" maxlength="24" value="${esc(h.phone)}"></label>
+    <label>Member since<input id="hs" maxlength="4" inputmode="numeric" value="${esc(h.since)}"></label></div>
+    <label>Billing address<input id="ha" maxlength="80" value="${esc(h.address)}"></label>
+    <button class="primary" type="submit">Save</button>
+  </form>`);
+  document.getElementById("x").onclick=()=>close();
+  document.getElementById("f").onsubmit=e=>{e.preventDefault();
+    S.holder={name:hn.value.trim(),email:he.value.trim(),phone:hp.value.trim(),address:ha.value.trim(),since:hs.value.trim()};
+    save();close(renderHolder)};
+}
+document.getElementById("hEdit").onclick=openHolder;
+document.getElementById("cards").addEventListener("pointerdown",e=>{const c=e.target.closest(".card");if(c)c.classList.add("press")});
+["pointerup","pointercancel","pointerleave"].forEach(ev=>document.getElementById("cards").addEventListener(ev,()=>document.querySelectorAll(".card.press").forEach(c=>c.classList.remove("press"))));
 document.addEventListener("keydown",e=>{if(e.key==="Escape")close()});
 
 function openAddTx(){
@@ -237,7 +325,8 @@ function openDetail(id){
   <div class="kv"><div><span>Card</span>${esc(card?card.name:"")} •••• ${esc(card?card.last4:"")}</div><div><span>Method</span>${esc(t.method)}</div><div><span>Daily Cash</span>${t.cash}% · ${fmt(t.amount*t.cash/100)}</div></div>
   <button class="ghost del" id="del">Delete Transaction</button>`);
   document.getElementById("x").onclick=close;
-  document.getElementById("del").onclick=()=>{S.tx=S.tx.filter(x=>x.id!==id);save();close();renderData()};
+  document.getElementById("del").onclick=()=>{S.tx=S.tx.filter(x=>x.id!==id);save();
+    close(()=>{const row=document.querySelector(`.tx[data-id="${id}"]`);if(row&&!reduce){row.style.animationDelay="0s";row.classList.add("out");setTimeout(renderData,330)}else renderData()})};
 }
 function openAddCard(){
   sheet(`<div class="sheethead"><h2>Add Card</h2><button class="sub" id="x">Cancel</button></div>
@@ -257,7 +346,7 @@ function openAddCard(){
 document.getElementById("fab").onclick=openAddTx;
 document.getElementById("addCardBtn").onclick=openAddCard;
 document.getElementById("menuBtn").onclick=()=>{};
-renderCards();renderData();
+renderHolder();renderCards();renderData();
 </script>
 
 </html>
