@@ -254,7 +254,7 @@ function renderHolder(){
 }
 const save=()=>{try{localStorage.setItem("lumen-wallet",JSON.stringify(S))}catch(e){}};
 
-const mark=`<svg class="mark" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2"><circle cx="24" cy="24" r="18"/><path d="M24 6v36M6 24h36" opacity=".5"/><circle cx="24" cy="24" r="7" fill="currentColor" stroke="none" opacity=".6"/></svg>`;
+const mark=`<div class="mark" role="img" aria-label="Apple" style="width:40px;height:46px;background:currentColor;-webkit-mask:url(apple-mark.png) center/contain no-repeat;mask:url(apple-mark.png) center/contain no-repeat"></div>`;
 const net=`<div class="net"><img src="mastercard-mark.png" alt="Mastercard" width="62" height="38" style="display:block;object-fit:contain;filter:grayscale(1)"></div>`;
 
 function renderCards(){
