@@ -58,6 +58,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .card.ember{background:linear-gradient(135deg,#ff9a6b,#e5603c 60%,#f58457);color:#fff}
 .card .mark{width:46px;height:46px}
 .card .mark.apple{width:34px;height:40px;background:repeating-linear-gradient(0deg,rgba(255,255,255,.16) 0 .5px,rgba(0,0,0,.08) .5px 1px,transparent 1px 1.5px),linear-gradient(160deg,#e6e6ea,#a4a4ac 45%,#c9c9cf 60%,#86868e);-webkit-mask:url(apple-mark.png) center/contain no-repeat;mask:url(apple-mark.png) center/contain no-repeat}
+.card .netmark{width:62px;height:38px;background:repeating-linear-gradient(0deg,rgba(255,255,255,.16) 0 .5px,rgba(0,0,0,.08) .5px 1px,transparent 1px 1.5px),linear-gradient(160deg,#e6e6ea,#a4a4ac 45%,#c9c9cf 60%,#86868e);-webkit-mask:url(mastercard-outline.png) center/contain no-repeat;mask:url(mastercard-outline.png) center/contain no-repeat}
 .card .row{display:flex;justify-content:space-between;align-items:flex-end}
 .card .name{font-weight:700;font-size:15px;letter-spacing:.02em}
 .card .num{font-size:13px;letter-spacing:.14em;font-variant-numeric:tabular-nums;opacity:.85}
@@ -256,7 +257,7 @@ function renderHolder(){
 const save=()=>{try{localStorage.setItem("lumen-wallet",JSON.stringify(S))}catch(e){}};
 
 const mark=`<div class="mark apple" role="img" aria-label="Apple"></div>`;
-const net=`<div class="net"><img src="mastercard-mark.png" alt="Mastercard" width="62" height="38" style="display:block;object-fit:contain;filter:grayscale(1)"></div>`;
+const net=`<div class="net"><div class="netmark" role="img" aria-label="Mastercard"></div></div>`;
 
 function renderCards(){
   const el=document.getElementById("cards");
