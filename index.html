@@ -36,7 +36,7 @@ img{max-width:100%}
 }
 *{box-sizing:border-box}
 html,body{background:var(--bg);color:var(--fg)}
-body{font-family:var(--font);-webkit-font-smoothing:antialiased;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 120px}
+body{font-family:var(--font);-webkit-font-smoothing:antialiased;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 40px}
 .app{max-width:440px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
 button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -94,7 +94,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .badge{font-size:12px;background:var(--surface-2);color:#c7c7cc;padding:2px 7px;border-radius:6px;font-weight:700}
 .empty{padding:28px;text-align:center;color:var(--muted)}
 
-.fab{position:fixed;right:calc(max(20px,env(safe-area-inset-right,0px)));bottom:calc(24px + env(safe-area-inset-bottom,0px));width:60px;height:60px;border-radius:50%;background:var(--fg);color:#000;font-size:30px;font-weight:500;display:grid;place-items:center;box-shadow:0 8px 30px rgba(0,0,0,.6)}
 
 /* Sheets */
 .scrim{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;z-index:20}
@@ -168,8 +167,7 @@ input,select{font:inherit;font-size:16px;color:var(--fg);background:var(--surfac
 .sheet{animation:up .45s cubic-bezier(.2,.9,.25,1)}
 @keyframes up{from{transform:translateY(100%)}}
 @keyframes down{to{transform:translateY(100%)}}
-.fab{transition:transform .25s cubic-bezier(.2,.8,.2,1)}
-.fab:active,.round:active,.pill button:active,.edit:active,.primary:active{transform:scale(.94)}
+.round:active,.pill button:active,.edit:active,.primary:active{transform:scale(.94)}
 .round,.pill button,.edit,.primary{transition:transform .2s,background .2s}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
@@ -211,7 +209,6 @@ input,select{font:inherit;font-size:16px;color:var(--fg);background:var(--surfac
   </div>
 </section>
 
-<button class="fab" id="fab" aria-label="Add transaction">+</button>
 <div id="sheetRoot"></div>
 
 <script>
@@ -288,7 +285,7 @@ function renderData(){
   if(bars.children.length!==7)bars.innerHTML=per.map(()=>`<i><b style="height:0%"></b></i>`).join("");
   requestAnimationFrame(()=>requestAnimationFrame(()=>per.forEach((v,i)=>{const b=bars.children[i].firstChild;b.style.transitionDelay=(i*50)+"ms";b.style.height=(v?Math.max(12,v/max*100):0)+"%"})));
   const list=document.getElementById("list");
-  list.innerHTML=txs.length?txs.map((t,i)=>`<button class="tx" data-id="${t.id}" style="animation-delay:${.25+i*.05}s"><div class="ico" style="background:${t.color}">${esc(t.merchant.trim()[0]||"?").toUpperCase()}</div><div class="txbody"><div class="txmain"><strong>${esc(t.merchant)}</strong><span>${esc(t.method)}</span><span>${new Date(t.date+"T12:00").toLocaleDateString("en-US",{month:"numeric",day:"numeric",year:"2-digit"})}</span></div><div class="txamt">${fmt(t.amount)}<span class="badge">${t.cash}%</span></div></div></button>`).join(""):`<div class="empty">No transactions on this card yet. Tap + to add one.</div>`;
+  list.innerHTML=txs.length?txs.map((t,i)=>`<button class="tx" data-id="${t.id}" style="animation-delay:${.25+i*.05}s"><div class="ico" style="background:${t.color}">${esc(t.merchant.trim()[0]||"?").toUpperCase()}</div><div class="txbody"><div class="txmain"><strong>${esc(t.merchant)}</strong><span>${esc(t.method)}</span><span>${new Date(t.date+"T12:00").toLocaleDateString("en-US",{month:"numeric",day:"numeric",year:"2-digit"})}</span></div><div class="txamt">${fmt(t.amount)}<span class="badge">${t.cash}%</span></div></div></button>`).join(""):`<div class="empty">No transactions on this card yet.</div>`;
 }
 document.getElementById("list").addEventListener("click",e=>{const b=e.target.closest(".tx");if(b)openDetail(b.dataset.id)});
 
@@ -326,24 +323,6 @@ document.getElementById("cards").addEventListener("pointerdown",e=>{const c=e.ta
 ["pointerup","pointercancel","pointerleave"].forEach(ev=>document.getElementById("cards").addEventListener(ev,()=>document.querySelectorAll(".card.press").forEach(c=>c.classList.remove("press"))));
 document.addEventListener("keydown",e=>{if(e.key==="Escape")close()});
 
-function openAddTx(){
-  sheet(`<div class="sheethead"><h2>New Transaction</h2><button class="sub" id="x">Cancel</button></div>
-  <form id="f" style="display:flex;flex-direction:column;gap:14px">
-    <label>Merchant<input id="m" required maxlength="40" placeholder="Store name"></label>
-    <div class="two"><label>Amount<input id="a" required type="number" step="0.01" min="0" inputmode="decimal" placeholder="0.00"></label>
-    <label>Date<input id="d" type="date" value="${today()}" required></label></div>
-    <div class="two"><label>Method<select id="me"><option>Tap to Pay</option><option>Card Number Used</option><option>In-App</option></select></label>
-    <label>Daily Cash<select id="c"><option value="1">1%</option><option value="2" selected>2%</option><option value="3">3%</option></select></label></div>
-    <label>Icon color<div class="swatches" id="sw">${PALETTE.map((p,i)=>`<button type="button" data-c="${p}" aria-pressed="${i===0}" style="background:${p}" aria-label="Color ${i+1}"></button>`).join("")}</div></label>
-    <button class="primary" type="submit">Add Transaction</button>
-  </form>`);
-  let color=PALETTE[0];
-  document.getElementById("x").onclick=close;
-  document.getElementById("sw").onclick=e=>{const b=e.target.closest("button");if(!b)return;color=b.dataset.c;[...e.currentTarget.children].forEach(x=>x.setAttribute("aria-pressed",x===b))};
-  document.getElementById("f").onsubmit=e=>{e.preventDefault();
-    S.tx.push({id:uid(),card:S.active,merchant:m.value.trim(),amount:parseFloat(a.value)||0,date:d.value,method:me.value,cash:+c.value,color});
-    save();close();renderData()};
-}
 function openDetail(id){
   const t=S.tx.find(x=>x.id===id);if(!t)return;
   const card=S.cards.find(c=>c.id===t.card);
@@ -367,7 +346,6 @@ function openAddCard(){
   document.getElementById("f").onsubmit=e=>{e.preventDefault();const id=uid();
     S.cards.push({id,name:n.value.trim(),finish:fi.value,last4:l.value});S.active=id;save();close();renderCards();renderData()};
 }
-document.getElementById("fab").onclick=openAddTx;
 document.getElementById("addCardBtn").onclick=openAddCard;
 const appEl=document.querySelector(".app");
 function renderInfo(){
