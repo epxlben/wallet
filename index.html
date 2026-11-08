@@ -209,30 +209,6 @@ input,select{font:inherit;font-size:16px;color:var(--fg);background:var(--surfac
   </div>
 </section>
 
-<!-- Mastercard Logo -->
-<div style="
-  position:fixed;
-  right:22px;
-  bottom:96px;
-  width:64px;
-  height:64px;
-  z-index:10;
-  border-radius:12px;
-  overflow:hidden;
-">
-  <img
-    src="mastercard.png"
-    alt="Mastercard"
-    style="
-      width:100%;
-      height:100%;
-      object-fit:contain;
-      display:block;
-    "
-  >
-</div>
-
-<!-- Existing Add Transaction Button -->
 <button class="fab" id="fab" aria-label="Add transaction">+</button>
 <div id="sheetRoot"></div>
 
@@ -279,7 +255,7 @@ function renderHolder(){
 const save=()=>{try{localStorage.setItem("lumen-wallet",JSON.stringify(S))}catch(e){}};
 
 const mark=`<svg class="mark" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2"><circle cx="24" cy="24" r="18"/><path d="M24 6v36M6 24h36" opacity=".5"/><circle cx="24" cy="24" r="7" fill="currentColor" stroke="none" opacity=".6"/></svg>`;
-const net=`<div class="net"><svg width="64" height="40" viewBox="0 0 64 40" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"><path d="M32 3L52 20 32 37 12 20Z"/><path d="M32 3v34M12 20h40" opacity=".55"/><path d="M32 11L42 20 32 29 22 20Z" opacity=".8"/></svg><span>lumen</span></div>`;
+const net=`<div class="net"><img src="mastercard-mark.png" alt="Mastercard" width="62" height="38" style="display:block;object-fit:contain"></div>`;
 
 function renderCards(){
   const el=document.getElementById("cards");
@@ -397,7 +373,7 @@ function renderInfo(){
   const txs=S.tx.filter(t=>t.card===c.id);
   const spent=txs.reduce((s,t)=>s+ +t.amount,0),cash=txs.reduce((s,t)=>s+t.amount*t.cash/100,0);
   miniCard.innerHTML=`<div class="card ${c.finish}">${mark}<div class="row"><div><div class="holdername">${esc(S.holder.name)}</div><div class="name">${esc(c.name)}</div><div class="num">•••• ${esc(c.last4)}</div></div>${net}</div></div>`;
-  cInfo.innerHTML=[["Card Name",c.name],["Card Number","•••• •••• •••• "+c.last4],["Finish",FINISHES[c.finish]],["Network","Lumen"],["Transactions",String(txs.length)],["Total Spent",fmt(spent)],["Daily Cash Earned",fmt(cash)]].map(([k,v])=>`<div><span>${k}</span><b>${esc(v)}</b></div>`).join("");
+  cInfo.innerHTML=[["Card Name",c.name],["Card Number","•••• •••• •••• "+c.last4],["Finish",FINISHES[c.finish]],["Network","Mastercard"],["Transactions",String(txs.length)],["Total Spent",fmt(spent)],["Daily Cash Earned",fmt(cash)]].map(([k,v])=>`<div><span>${k}</span><b>${esc(v)}</b></div>`).join("");
   rmCard.hidden=S.cards.length<2;
 }
 function openInfo(){
