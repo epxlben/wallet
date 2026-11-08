@@ -41,7 +41,7 @@ body{font-family:var(--font);-webkit-font-smoothing:antialiased;padding-left:max
 button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
-.top{display:flex;justify-content:space-between;align-items:center}
+.top{display:flex;justify-content:flex-end;align-items:center}
 .round{width:52px;height:52px;border-radius:50%;background:var(--surface);display:grid;place-items:center}
 .pill{display:flex;align-items:center;gap:6px;background:var(--surface);border-radius:999px;padding:6px}
 .pill button{height:40px;padding:0 14px;border-radius:999px;display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px}
@@ -175,7 +175,6 @@ input,select{font:inherit;font-size:16px;color:var(--fg);background:var(--surfac
 
 <div class="app">
   <div class="top">
-    <span class="proto">Prototype</span>
     <div class="pill">
       <button id="infoBtn" aria-label="Card and cardholder information"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2.5" y="5" width="19" height="14" rx="3"/><path d="M6 15h3M12 15h2"/><circle cx="16.5" cy="10" r="1.6" fill="currentColor" stroke="none"/></svg></button>
       <button id="addCardBtn" aria-label="Add card"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
