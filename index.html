@@ -130,6 +130,22 @@ input,select{font:inherit;font-size:16px;color:var(--fg);background:var(--surfac
 .edit:hover{background:var(--line)}
 .card .holdername{font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.8;margin-bottom:4px}
 
+
+/* Info page */
+.top{min-height:52px}
+.page{position:fixed;inset:0;z-index:15;background:var(--bg);overflow-y:auto;padding-top:env(safe-area-inset-top,0px);padding-bottom:calc(40px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));animation:pagein .45s cubic-bezier(.2,.9,.25,1)}
+.page.leaving{animation:pageout .32s ease forwards}
+@keyframes pagein{from{transform:translateX(100%)}}
+@keyframes pageout{to{transform:translateX(100%)}}
+.app.behind{transition:transform .45s cubic-bezier(.2,.9,.25,1),opacity .45s;transform:translateX(-18%);opacity:.4}
+.app{transition:transform .35s ease,opacity .35s}
+.pagebar{max-width:440px;margin:12px auto 0;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pagebar h2{margin:0;font-size:18px;font-weight:700}
+.pagebody{max-width:440px;margin:20px auto 0;display:flex;flex-direction:column;gap:12px}
+.pagebody .card{width:100%}
+.sect{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:10px;padding-left:4px}
+.reveal{background:none;color:var(--accent);font-weight:700;font-size:14px;padding:0}
+
 /* Motion */
 .card{transition:transform .5s cubic-bezier(.2,.8,.2,1),box-shadow .5s}
 .card::after{content:"";position:absolute;inset:-40%;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.35) 50%,transparent 60%);transform:translateX(-60%);animation:sheen 7s ease-in-out 1.2s infinite;pointer-events:none}
@@ -159,10 +175,10 @@ input,select{font:inherit;font-size:16px;color:var(--fg);background:var(--surfac
 
 <div class="app">
   <div class="top">
-    <button class="round" id="menuBtn" aria-label="Wallet"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
     <span class="proto">Prototype</span>
     <div class="pill">
-      <button id="addCardBtn" aria-label="Add card"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2.5" y="5" width="19" height="14" rx="3"/><path d="M2.5 10h19"/></svg>+</button>
+      <button id="infoBtn" aria-label="Card and cardholder information"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2.5" y="5" width="19" height="14" rx="3"/><path d="M6 15h3M12 15h2"/><circle cx="16.5" cy="10" r="1.6" fill="currentColor" stroke="none"/></svg></button>
+      <button id="addCardBtn" aria-label="Add card"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
     </div>
   </div>
 
@@ -174,15 +190,24 @@ input,select{font:inherit;font-size:16px;color:var(--fg);background:var(--surfac
     <div class="tile"><h3>Weekly Activity</h3><div class="sub" style="font-variant-numeric:tabular-nums">+<span id="cashAmt">$0.00</span> Daily Cash</div><div class="bars" id="bars"></div></div>
   </div>
 
-  <div class="listhead"><h2>Cardholder</h2></div>
-  <div class="holder rise" style="animation-delay:.18s">
-    <div class="hrow"><div class="avatar" id="hAvatar"></div><div class="who"><strong id="hName"></strong><span id="hSince"></span></div><button class="edit" id="hEdit">Edit</button></div>
-    <div class="kv" id="hInfo"></div>
-  </div>
-
   <div class="listhead"><h2>Latest Transactions</h2></div>
   <div class="list" id="list"></div>
 </div>
+
+<section class="page" id="infoPage" hidden aria-label="Card information">
+  <div class="pagebar"><button class="round" id="backBtn" aria-label="Back"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Card Information</h2><span style="width:52px"></span></div>
+  <div class="pagebody">
+    <div id="miniCard"></div>
+    <div class="sect">Card</div>
+    <div class="kv" id="cInfo"></div>
+    <div class="sect">Cardholder</div>
+    <div class="holder">
+      <div class="hrow"><div class="avatar" id="hAvatar"></div><div class="who"><strong id="hName"></strong><span id="hSince"></span></div><button class="edit" id="hEdit">Edit</button></div>
+      <div class="kv" id="hInfo"></div>
+    </div>
+    <button class="ghost del" id="rmCard">Remove This Card</button>
+  </div>
+</section>
 
 <button class="fab" id="fab" aria-label="Add transaction">+</button>
 <div id="sheetRoot"></div>
@@ -292,7 +317,7 @@ function openHolder(){
   document.getElementById("x").onclick=()=>close();
   document.getElementById("f").onsubmit=e=>{e.preventDefault();
     S.holder={name:hn.value.trim(),email:he.value.trim(),phone:hp.value.trim(),address:ha.value.trim(),since:hs.value.trim()};
-    save();close(renderHolder)};
+    save();close(()=>{renderHolder();renderInfo()})};
 }
 document.getElementById("hEdit").onclick=openHolder;
 document.getElementById("cards").addEventListener("pointerdown",e=>{const c=e.target.closest(".card");if(c)c.classList.add("press")});
@@ -335,17 +360,38 @@ function openAddCard(){
     <div class="two"><label>Last 4 digits<input id="l" required pattern="[0-9]{4}" maxlength="4" inputmode="numeric" placeholder="1234"></label>
     <label>Finish<select id="fi">${Object.entries(FINISHES).map(([k,v])=>`<option value="${k}">${v}</option>`).join("")}</select></label></div>
     <button class="primary" type="submit">Add Card</button>
-    ${S.cards.length>1?`<button type="button" class="ghost del" id="rm">Remove Current Card</button>`:""}
   </form>`);
   document.getElementById("x").onclick=close;
   document.getElementById("f").onsubmit=e=>{e.preventDefault();const id=uid();
     S.cards.push({id,name:n.value.trim(),finish:fi.value,last4:l.value});S.active=id;save();close();renderCards();renderData()};
-  const rm=document.getElementById("rm");
-  if(rm)rm.onclick=()=>{S.tx=S.tx.filter(t=>t.card!==S.active);S.cards=S.cards.filter(c=>c.id!==S.active);S.active=S.cards[0].id;save();close();renderCards();renderData()};
 }
 document.getElementById("fab").onclick=openAddTx;
 document.getElementById("addCardBtn").onclick=openAddCard;
-document.getElementById("menuBtn").onclick=()=>{};
+const appEl=document.querySelector(".app");
+function renderInfo(){
+  const c=S.cards.find(x=>x.id===S.active)||S.cards[0];
+  const txs=S.tx.filter(t=>t.card===c.id);
+  const spent=txs.reduce((s,t)=>s+ +t.amount,0),cash=txs.reduce((s,t)=>s+t.amount*t.cash/100,0);
+  miniCard.innerHTML=`<div class="card ${c.finish}">${mark}<div class="row"><div><div class="holdername">${esc(S.holder.name)}</div><div class="name">${esc(c.name)}</div><div class="num">•••• ${esc(c.last4)}</div></div>${net}</div></div>`;
+  cInfo.innerHTML=[["Card Name",c.name],["Card Number","•••• •••• •••• "+c.last4],["Finish",FINISHES[c.finish]],["Network","Lumen"],["Transactions",String(txs.length)],["Total Spent",fmt(spent)],["Daily Cash Earned",fmt(cash)]].map(([k,v])=>`<div><span>${k}</span><b>${esc(v)}</b></div>`).join("");
+  rmCard.hidden=S.cards.length<2;
+}
+function openInfo(){
+  renderInfo();infoPage.hidden=false;infoPage.classList.remove("leaving");appEl.classList.add("behind");
+  infoPage.scrollTop=0;backBtn.focus();
+}
+function closeInfo(){
+  appEl.classList.remove("behind");
+  if(reduce){infoPage.hidden=true;return}
+  infoPage.classList.add("leaving");setTimeout(()=>{infoPage.hidden=true;infoPage.classList.remove("leaving")},300);
+}
+infoBtn.onclick=openInfo;backBtn.onclick=closeInfo;
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!infoPage.hidden&&!document.getElementById("scrim"))closeInfo()});
+rmCard.onclick=()=>{
+  sheet(`<div class="sheethead"><h2>Remove Card?</h2></div><p class="sub" style="margin:0">This removes the card and all its transactions from this wallet.</p><button class="primary" style="background:var(--danger);color:#fff" id="yes">Remove Card</button><button class="ghost" id="no">Cancel</button>`);
+  no.onclick=()=>close();
+  yes.onclick=()=>{S.tx=S.tx.filter(t=>t.card!==S.active);S.cards=S.cards.filter(c=>c.id!==S.active);S.active=S.cards[0].id;save();close(()=>{closeInfo();renderCards();renderData()})};
+};
 renderHolder();renderCards();renderData();
 </script>
 
